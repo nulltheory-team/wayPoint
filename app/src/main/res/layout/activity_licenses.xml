@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/on_surface"
+        app:title="@string/licenses"
+        app:titleTextColor="@color/on_surface" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/licenseText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@color/on_surface"
+            android:textColorLink="@color/accent"
+            android:textIsSelectable="true"
+            android:textSize="14sp" />
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:visibility="gone">
+
+    <ProgressBar
+        android:id="@+id/routeProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_marginBottom="12dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/accent"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/routeSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/on_surface"
+                android:textSize="20sp"
+                android:textStyle="normal"
+                android:fontFamily="sans-serif-medium"
+                tools:text="24.7 km · 387 points" />
+
+            <TextView
+                android:id="@+id/routeDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/on_surface_dim"
+                android:textSize="14sp"
+                tools:text="30 min of simulated driving at the 50 km/h default speed" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/startButton"
+            style="@style/Widget.Waypoint.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:minWidth="150dp"
+            android:text="@string/start" />
+    </LinearLayout>
+
+    <!-- Shown when the mock location appop has not been granted. -->
+    <LinearLayout
+        android:id="@+id/mockWarnBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_warning"
+                app:tint="@color/warn" />
+
+            <TextView
+                android:id="@+id/mockWarnText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/mock_not_granted"
+                android:textColor="@color/warn"
+                android:textSize="14sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fixThisButton"
+                style="@style/Widget.Waypoint.Button.Warn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:minWidth="150dp"
+                android:text="@string/fix_this" />
+        </LinearLayout>
+
+        <!-- Selectable so it can be copied straight out over scrcpy. -->
+        <TextView
+            android:id="@+id/adbCommand"
+            style="@style/Text.Waypoint.Telemetry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_mono"
+            android:padding="12dp"
+            android:textColor="@color/on_surface_dim"
+            tools:text="adb shell appops set in.nulltheory.waypoint android:mock_location allow" />
+    </LinearLayout>
+</LinearLayout>

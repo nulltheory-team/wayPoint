@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/on_surface"
+        app:title="@string/settings"
+        app:titleTextColor="@color/on_surface" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Text.Waypoint.SectionHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/section_mock_location" />
+
+            <include
+                android:id="@+id/rowStatus"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/rowDevOptions"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                style="@style/Text.Waypoint.SectionHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/section_simulation" />
+
+            <include
+                android:id="@+id/rowUpdateRate"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/rowDefaultSpeed"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <include
+                android:id="@+id/rowLoop"
+                layout="@layout/row_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <include
+                android:id="@+id/rowJitter"
+                layout="@layout/row_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                style="@style/Text.Waypoint.SectionHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/section_services" />
+
+            <include
+                android:id="@+id/rowTileServer"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/rowRoutingServer"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <include
+                android:id="@+id/rowGeocodingServer"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                style="@style/Text.Waypoint.SectionHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/section_about" />
+
+            <include
+                android:id="@+id/rowVersion"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/rowLicenses"
+                layout="@layout/row_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:text="@string/settings_footer"
+                android:textColor="@color/on_surface_dim"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <in.nulltheory.waypoint.ui.SegmentedProgressBar
+            android:id="@+id/runProgress"
+            android:layout_width="0dp"
+            android:layout_height="10dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/runProgressPct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:gravity="end"
+            android:minWidth="44dp"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="14sp"
+            tools:text="38%" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/speedValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/accent"
+            android:textSize="40sp"
+            tools:text="50" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_gravity="bottom"
+            android:text="@string/kmh"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="14sp" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <View
+            android:id="@+id/liveDot"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:background="@drawable/dot_live" />
+
+        <TextView
+            android:id="@+id/runStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:letterSpacing="0.08"
+            android:textColor="@color/accent"
+            android:textSize="13sp"
+            tools:text="RUNNING" />
+    </LinearLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/speedSlider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:stepSize="1"
+        android:value="50"
+        android:valueFrom="0"
+        android:valueTo="150"
+        app:labelBehavior="gone"
+        app:thumbColor="@color/accent"
+        app:tickVisible="false"
+        app:trackColorActive="@color/accent"
+        app:trackColorInactive="@color/accent_dim"
+        app:trackHeight="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="13sp" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="150"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- Preset chips are the primary control on dashcam hardware. -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/presetRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip0"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip20"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip30"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="30" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip50"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="50" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip80"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="80" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chip120"
+                style="@style/Widget.Waypoint.Chip"
+                        android:checkable="true"
+                        android:layout_marginEnd="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="120" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/runNotice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/route_complete"
+        android:textColor="@color/accent"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pauseButton"
+            style="@style/Widget.Waypoint.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pause"
+            app:icon="@drawable/ic_pause"
+            app:iconGravity="textStart" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/stopButton"
+            style="@style/Widget.Waypoint.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/stop"
+            app:icon="@drawable/ic_stop"
+            app:iconGravity="textStart" />
+    </LinearLayout>
+
+    <!-- The debug readout you watch next to logcat. -->
+    <TextView
+        android:id="@+id/telemetry"
+        style="@style/Text.Waypoint.Telemetry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        tools:text="12.9721, 77.5933 · 143° · 10.4/27.4 km" />
+</LinearLayout>

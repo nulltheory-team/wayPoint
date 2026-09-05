@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="60dp"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="8dp">
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_place"
+        app:tint="@color/on_surface_dim" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/placeName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/on_surface"
+            android:textSize="16sp"
+            tools:text="Whitefield" />
+
+        <TextView
+            android:id="@+id/placeDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/on_surface_dim"
+            android:textSize="14sp"
+            tools:text="Bengaluru, Karnataka, India" />
+    </LinearLayout>
+</LinearLayout>
