@@ -25,6 +25,7 @@ import `in`.nulltheory.waypoint.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -93,6 +94,7 @@ class MockLocationService : Service() {
 
     @Volatile private var speedMps: Double = 0.0
     @Volatile private var paused: Boolean = false
+    @Volatile private var ticking: Boolean = false
     private var fixSeq: Long = 0
     private var lastArrivedLogMs: Long = 0L
     private var lastTickNanos: Long = 0L
@@ -122,8 +124,14 @@ class MockLocationService : Service() {
     // ---------------------------------------------------------------- control
 
     fun start(points: List<LatLng>, speedKmh: Int) {
+        // The Activity reaches us via startForegroundService(), which gives us a few seconds
+        // to call startForeground() or the process is killed with
+        // ForegroundServiceDidNotStartInTimeException. Every early return below would
+        // otherwise skip it, so enter the foreground before anything can fail.
+        startForegroundNotification()
+
         if (points.size < 2) {
-            _state.value = _state.value.copy(error = "Route has fewer than two points")
+            _state.update { it.copy(error = "Route has fewer than two points") }
             return
         }
 
@@ -158,7 +166,7 @@ class MockLocationService : Service() {
             loop = prefs.loop
         )
 
-        startForegroundNotification()
+        pushNotification(force = true)
         acquireWakeLock()
         startTicking()
     }
@@ -166,7 +174,7 @@ class MockLocationService : Service() {
     fun setSpeed(kmh: Int) {
         val previous = _state.value.speedKmh
         speedMps = kmh / 3.6
-        _state.value = _state.value.copy(speedKmh = kmh)
+        _state.update { it.copy(speedKmh = kmh) }
         pushNotification(force = true)
         if (previous != kmh) SimLog.event("SPEED", "$previous -> $kmh km/h")
     }
@@ -174,7 +182,7 @@ class MockLocationService : Service() {
     fun pause() {
         if (_state.value.status != RunStatus.RUNNING) return
         paused = true
-        _state.value = _state.value.copy(status = RunStatus.PAUSED)
+        _state.update { it.copy(status = RunStatus.PAUSED) }
         pushNotification(force = true)
         SimLog.event("PAUSED", "no fixes are being emitted")
     }
@@ -183,7 +191,7 @@ class MockLocationService : Service() {
         if (_state.value.status != RunStatus.PAUSED) return
         paused = false
         lastTickNanos = SystemClock.elapsedRealtimeNanos()
-        _state.value = _state.value.copy(status = RunStatus.RUNNING)
+        _state.update { it.copy(status = RunStatus.RUNNING) }
         pushNotification(force = true)
         SimLog.event("RESUMED")
     }
@@ -193,7 +201,7 @@ class MockLocationService : Service() {
         val sim = simulator ?: return
         sim.reset()
         paused = false
-        _state.value = _state.value.copy(status = RunStatus.RUNNING, error = null)
+        _state.update { it.copy(status = RunStatus.RUNNING, error = null) }
         lastTickNanos = SystemClock.elapsedRealtimeNanos()
         if (tick == null) startTicking()
         pushNotification(force = true)
@@ -214,7 +222,7 @@ class MockLocationService : Service() {
     fun applyPrefs() {
         val newRate = prefs.updateRateHz
         val rateChanged = newRate != _state.value.updateRateHz
-        _state.value = _state.value.copy(updateRateHz = newRate, loop = prefs.loop)
+        _state.update { it.copy(updateRateHz = newRate, loop = prefs.loop) }
         if (rateChanged && tick != null) {
             stopTicking()
             startTicking()
@@ -224,6 +232,7 @@ class MockLocationService : Service() {
     // ---------------------------------------------------------------- ticking
 
     private fun startTicking() {
+        ticking = true
         val hz = _state.value.updateRateHz.coerceIn(1, 10)
         val periodMs = (1000L / hz).coerceAtLeast(1L)
         lastTickNanos = SystemClock.elapsedRealtimeNanos()
@@ -238,12 +247,16 @@ class MockLocationService : Service() {
     }
 
     private fun stopTicking() {
+        // cancel(false) lets an in-flight tick finish, so this flag is what stops it writing
+        // a stale fix back into a snapshot that has already been reset.
+        ticking = false
         tick?.cancel(false)
         tick = null
     }
 
     private fun onTick() {
         try {
+            if (!ticking) return
             val sim = simulator ?: return
             val now = SystemClock.elapsedRealtimeNanos()
             // Real elapsed time, not the nominal interval: if the device stalls for 300ms the
@@ -269,7 +282,7 @@ class MockLocationService : Service() {
             if (fix == null) return
 
             val injected = inject(fix)
-            _state.value = _state.value.copy(fix = fix)
+            _state.update { it.copy(fix = fix) }
             pushNotification(force = false)
 
             fixSeq++
@@ -312,7 +325,7 @@ class MockLocationService : Service() {
      * arrived, not vanished. Fixes continue at the destination with speed 0 until Stop.
      */
     private fun onRouteConsumed() {
-        _state.value = _state.value.copy(status = RunStatus.FINISHED)
+        _state.update { it.copy(status = RunStatus.FINISHED) }
         pushNotification(force = true)
         lastArrivedLogMs = 0L
         SimLog.event(
@@ -337,7 +350,7 @@ class MockLocationService : Service() {
 
     private fun failWith(message: String) {
         stopTicking()
-        _state.value = _state.value.copy(status = RunStatus.FINISHED, error = message)
+        _state.update { it.copy(status = RunStatus.FINISHED, error = message) }
         pushNotification(force = true)
         SimLog.failed(message)
     }
@@ -394,7 +407,7 @@ class MockLocationService : Service() {
                     "Waypoint is not the selected mock location app"
                 else -> lastError?.message ?: "no test provider could be registered"
             }
-            _state.value = _state.value.copy(status = RunStatus.IDLE, error = why)
+            _state.update { it.copy(status = RunStatus.IDLE, error = why) }
             return false
         }
         // Prefer GPS as the emitting provider; fall back to whatever did register.
@@ -455,8 +468,16 @@ class MockLocationService : Service() {
             speedAccuracyMetersPerSecond = 0.5f
             verticalAccuracyMeters = 3.0f
         }
-        runCatching { locationManager.setTestProviderLocation(primaryProvider, loc) }
-            .onFailure { Log.w(TAG, "setTestProviderLocation failed for $primaryProvider", it) }
+        try {
+            locationManager.setTestProviderLocation(primaryProvider, loc)
+        } catch (e: SecurityException) {
+            // The appop was revoked mid-run. Must reach onTick's handler and stop the run —
+            // swallowing it here would leave the UI and logcat reporting a healthy
+            // simulation while nothing at all is being injected.
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "setTestProviderLocation failed for $primaryProvider", e)
+        }
 
         // Separate pipe, separate audience: a fused consumer never sees the test provider,
         // and a LocationManager consumer never sees this, so there is no double delivery.

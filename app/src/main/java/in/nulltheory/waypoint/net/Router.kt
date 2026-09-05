@@ -30,7 +30,7 @@ sealed interface RouteOutcome {
 class Router(private val baseUrl: String, private val cache: RouteCache?) {
 
     suspend fun route(from: LatLng, to: LatLng): RouteOutcome = withContext(Dispatchers.IO) {
-        cache?.get(from, to)?.let { return@withContext RouteOutcome.Success(it) }
+        cache?.get(baseUrl, from, to)?.let { return@withContext RouteOutcome.Success(it) }
 
         val url = String.format(
             Locale.US,
@@ -65,7 +65,7 @@ class Router(private val baseUrl: String, private val cache: RouteCache?) {
                 if (points.size < 2) return@withContext RouteOutcome.NoRoute
 
                 val route = Route(points, first.optDouble("distance", 0.0))
-                cache?.put(from, to, route)
+                cache?.put(baseUrl, from, to, route)
                 RouteOutcome.Success(route)
             }
         } catch (e: IOException) {

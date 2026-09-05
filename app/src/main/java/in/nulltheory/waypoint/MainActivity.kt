@@ -206,7 +206,10 @@ class MainActivity : AppCompatActivity() {
             // Backing out of a live run keeps it running: watching the SDK under test means
             // switching to another app while the fake drive continues.
             is SimState.Live -> moveTaskToBack(true)
-            is SimState.Finished -> transitionTo(SimState.Routed(s.route))
+            // Arriving does not end the run — the service keeps injecting at the destination,
+            // holding the wake lock and shadowing real GPS. Leaving screen 3 has to tear that
+            // down, or it runs invisibly until the process dies.
+            is SimState.Finished -> stopSimulation()
             is SimState.Routed -> backToDestination()
             SimState.Routing -> {
                 routeJob?.cancel()
@@ -669,6 +672,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onSnapshot(snap: SimSnapshot) {
+        // start() is optimistic: the UI moves to screen 3 before the service has registered
+        // providers. If that failed we are stranded there, where Back only backgrounds the
+        // app, so retreat to the preview and surface the reason.
+        if (snap.status == RunStatus.IDLE && snap.error != null) {
+            val route = (state as? SimState.Live)?.route
+                ?: (state as? SimState.Finished)?.route
+            if (route != null) {
+                toast(getString(R.string.sim_failed, snap.error))
+                transitionTo(SimState.Routed(route))
+                return
+            }
+        }
+
         snap.error?.let {
             if (snap.status != RunStatus.RUNNING) {
                 binding.sheetRun.runNotice.text = getString(R.string.sim_failed, it)

@@ -68,7 +68,9 @@ suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
         }
 
         override fun onResponse(call: Call, response: Response) {
-            cont.resume(response)
+            // Search cancels on every keystroke, so a response can land after the coroutine
+            // is already gone. Without this the body — and its connection — is never closed.
+            cont.resume(response) { _ -> runCatching { response.close() } }
         }
     })
 }

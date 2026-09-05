@@ -18,8 +18,8 @@ class RouteCache(private val dir: File) {
         runCatching { dir.mkdirs() }
     }
 
-    fun get(from: LatLng, to: LatLng): Route? {
-        val file = File(dir, key(from, to))
+    fun get(server: String, from: LatLng, to: LatLng): Route? {
+        val file = File(dir, key(server, from, to))
         if (!file.exists()) return null
         return runCatching {
             val json = JSONObject(file.readText())
@@ -37,11 +37,11 @@ class RouteCache(private val dir: File) {
         }.getOrNull()
     }
 
-    fun put(from: LatLng, to: LatLng, route: Route) {
+    fun put(server: String, from: LatLng, to: LatLng, route: Route) {
         runCatching {
             val coords = JSONArray()
             route.points.forEach { coords.put(JSONArray().put(it.lon).put(it.lat)) }
-            File(dir, key(from, to)).writeText(
+            File(dir, key(server, from, to)).writeText(
                 JSONObject()
                     .put("distance", route.distanceMeters)
                     .put("coords", coords)
@@ -61,11 +61,13 @@ class RouteCache(private val dir: File) {
      * Five decimal places is roughly a metre, which is finer than any point a user can pick
      * by search or long-press, so two attempts at the same route hit the same entry.
      */
-    private fun key(from: LatLng, to: LatLng): String =
+    private fun key(server: String, from: LatLng, to: LatLng): String =
         String.format(
             Locale.US, // a locale with a comma decimal separator would collide keys
-            "%.5f_%.5f__%.5f_%.5f.json",
-            from.lat, from.lon, to.lat, to.lon
+            // The server is part of the identity: pointing Settings at a different OSRM
+            // instance must not replay geometry the previous one returned.
+            "%d_%.5f_%.5f__%.5f_%.5f.json",
+            server.hashCode(), from.lat, from.lon, to.lat, to.lon
         ).replace('-', 'm')
 
     private companion object {
