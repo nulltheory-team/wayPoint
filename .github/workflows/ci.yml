@@ -31,19 +31,25 @@ jobs:
     name: Build, test and lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
+
+      # git stores the executable bit, and a gradlew committed from Windows arrives as 100644.
+      # The wrapper is then found but not runnable, and every gradle step dies with exit 126.
+      # The mode is fixed in the repo too; this keeps a future Windows commit from undoing it.
+      - name: Make the Gradle wrapper executable
+        run: chmod +x ./gradlew
 
       - name: Assemble
         run: ./gradlew assembleDebug --stacktrace
@@ -56,7 +62,7 @@ jobs:
 
       - name: Upload test and lint reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reports
           path: |
@@ -76,7 +82,7 @@ jobs:
       should_release: ${{ steps.decide.outputs.should_release }}
       previous_tag: ${{ steps.decide.outputs.previous_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -129,21 +135,24 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Make the Gradle wrapper executable
+        run: chmod +x ./gradlew
 
       - name: Build release APK
         env:
