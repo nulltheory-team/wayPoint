@@ -148,11 +148,25 @@ jobs:
           PREVIOUS_TAG="${{ needs.check.outputs.previous_tag }}"
 
           # A hand-written CHANGELOG.md section wins over generated commit history.
+          #
+          # Matching is done by normalising each heading and comparing strings, not with a
+          # dynamic regex: building one from the version puts "[" and "." into a pattern,
+          # where an awk string literal quietly drops the backslash and turns "\[" into a
+          # character class. That silently matches *every* "## " heading, folding the previous
+          # release's notes into this one.
           SECTION=""
           if [ -f CHANGELOG.md ]; then
             SECTION=$(awk -v v="$VERSION" '
-              $0 ~ "^## +\\[?v?" v "\\]?" { found=1; next }
-              found && /^## / { exit }
+              /^## / {
+                if (found) exit
+                heading = $0
+                sub(/^## +/, "", heading)
+                gsub(/[][]/, "", heading)      # drop [ and ]
+                sub(/^v/, "", heading)
+                split(heading, parts, /[ \t]/) # tolerate "0.2.0 - 2026-09-06"
+                if (parts[1] == v) found = 1
+                next
+              }
               found { print }
             ' CHANGELOG.md | sed '/^[[:space:]]*$/d' || true)
           fi
