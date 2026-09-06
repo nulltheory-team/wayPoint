@@ -40,6 +40,7 @@ import `in`.nulltheory.waypoint.net.Route
 import `in`.nulltheory.waypoint.net.RouteCache
 import `in`.nulltheory.waypoint.net.RouteOutcome
 import `in`.nulltheory.waypoint.net.Router
+import `in`.nulltheory.waypoint.sim.BrakePhase
 import `in`.nulltheory.waypoint.sim.GeoUtils
 import `in`.nulltheory.waypoint.sim.LatLng
 import `in`.nulltheory.waypoint.sim.MockLocationService
@@ -359,6 +360,8 @@ class MainActivity : AppCompatActivity() {
         presetButtons().forEach { (kmh, button) ->
             button.setOnClickListener { applySpeed(kmh, syncSlider = true) }
         }
+        binding.sheetRun.brakeButton.setOnClickListener { service?.harshBrake() }
+        binding.sheetRun.recoverButton.setOnClickListener { service?.recoverFromBrake() }
         binding.sheetRun.pauseButton.setOnClickListener { onPauseOrRunAgain() }
         binding.sheetRun.stopButton.setOnClickListener { stopSimulation() }
     }
@@ -742,6 +745,18 @@ class MainActivity : AppCompatActivity() {
         }
         run.runStatus.text = statusText
         run.liveDot.visibility = if (live) View.VISIBLE else View.INVISIBLE
+
+        // Brake needs something to brake from, and re-triggering mid-event would restart the
+        // ramp from a lower speed and lose the original cruising speed. Recover is live while
+        // stopped, and also mid-deceleration so a stop can be aborted.
+        val running = snap.status == RunStatus.RUNNING
+        run.brakeButton.isEnabled =
+            running && snap.speedKmh > 0 && snap.brakePhase == BrakePhase.NONE
+        run.recoverButton.isEnabled = running && (
+            snap.brakePhase == BrakePhase.DECELERATING || snap.brakePhase == BrakePhase.STOPPED
+            )
+        run.brakeButton.alpha = if (run.brakeButton.isEnabled) 1f else DISABLED_ALPHA
+        run.recoverButton.alpha = if (run.recoverButton.isEnabled) 1f else DISABLED_ALPHA
 
         run.pauseButton.text = when (snap.status) {
             RunStatus.PAUSED -> getString(R.string.resume)

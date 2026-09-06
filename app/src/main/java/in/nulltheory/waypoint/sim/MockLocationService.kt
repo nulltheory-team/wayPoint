@@ -45,8 +45,13 @@ data class SimSnapshot(
     val totalMeters: Double = 0.0,
     val updateRateHz: Int = Prefs.DEFAULT_RATE_HZ,
     val loop: Boolean = false,
+    /** Where a harsh-braking event has got to, so the UI can gate Brake and Recover. */
+    val brakePhase: BrakePhase = BrakePhase.NONE,
     val error: String? = null
 )
+
+/** Stages of an injected harsh-braking event. */
+enum class BrakePhase { NONE, DECELERATING, STOPPED, RECOVERING }
 
 /**
  * Owns the simulation. The Activity binds and observes, so a fake drive survives rotation and
@@ -95,6 +100,11 @@ class MockLocationService : Service() {
     @Volatile private var speedMps: Double = 0.0
     @Volatile private var paused: Boolean = false
     @Volatile private var ticking: Boolean = false
+
+    @Volatile private var brakePhase: BrakePhase = BrakePhase.NONE
+
+    /** The cruising speed to climb back to when Recover is pressed. */
+    @Volatile private var brakeResumeMps: Double = 0.0
     private var fixSeq: Long = 0
     private var lastArrivedLogMs: Long = 0L
     private var lastTickNanos: Long = 0L
@@ -171,8 +181,54 @@ class MockLocationService : Service() {
         startTicking()
     }
 
+    /**
+     * Slams to a standstill and stays there until [recoverFromBrake].
+     *
+     * The stop is open-ended rather than timed, so the same control also covers dwell: sit at
+     * the kerb for as long as the test needs, then pull away. The speed the vehicle was doing
+     * is remembered so recovery can return to it.
+     *
+     * Speed ramps across ticks rather than jumping — a single 120-to-0 step between two fixes
+     * is not a braking event to anything downstream, it is an implausible outlier that filters
+     * discard.
+     */
+    fun harshBrake() {
+        if (_state.value.status != RunStatus.RUNNING) return
+        if (speedMps <= 0.0 || brakePhase != BrakePhase.NONE) return
+
+        brakeResumeMps = speedMps
+        setBrakePhase(BrakePhase.DECELERATING)
+        SimLog.event(
+            "HARSH BRAKE",
+            "from ${(speedMps * 3.6).roundToInt()} km/h at $HARSH_BRAKE_DECEL_MPS2 m/s² " +
+                "(~${"%.2f".format(HARSH_BRAKE_DECEL_MPS2 / 9.81)} g)"
+        )
+    }
+
+    /**
+     * Climbs back to the speed held before the brake. Also usable mid-deceleration, to abort
+     * a stop that has not finished.
+     */
+    fun recoverFromBrake() {
+        if (brakePhase != BrakePhase.DECELERATING && brakePhase != BrakePhase.STOPPED) return
+        setBrakePhase(BrakePhase.RECOVERING)
+        SimLog.event("RECOVER", "climbing back to ${(brakeResumeMps * 3.6).roundToInt()} km/h")
+    }
+
+    private fun setBrakePhase(phase: BrakePhase) {
+        brakePhase = phase
+        _state.update { it.copy(brakePhase = phase) }
+    }
+
+    private fun cancelBraking() {
+        if (brakePhase == BrakePhase.NONE) return
+        setBrakePhase(BrakePhase.NONE)
+    }
+
     fun setSpeed(kmh: Int) {
         val previous = _state.value.speedKmh
+        // Touching the slider or a preset overrides a brake in progress.
+        cancelBraking()
         speedMps = kmh / 3.6
         _state.update { it.copy(speedKmh = kmh) }
         pushNotification(force = true)
@@ -266,6 +322,8 @@ class MockLocationService : Service() {
 
             if (paused) return
 
+            applyBraking(dt)
+
             var fix = sim.advance(speedMps, dt)
             if (fix == null) {
                 if (_state.value.loop) {
@@ -324,6 +382,44 @@ class MockLocationService : Service() {
      * The route is used up, but the ticker deliberately keeps running: the vehicle has
      * arrived, not vanished. Fixes continue at the destination with speed 0 until Stop.
      */
+    /** Drives the harsh-braking state machine. Runs on the ticker thread. */
+    private fun applyBraking(dt: Double) {
+        when (brakePhase) {
+            BrakePhase.NONE -> return
+
+            BrakePhase.DECELERATING -> {
+                speedMps = (speedMps - HARSH_BRAKE_DECEL_MPS2 * dt).coerceAtLeast(0.0)
+                if (speedMps <= 0.0) {
+                    setBrakePhase(BrakePhase.STOPPED)
+                    SimLog.event(
+                        "HARSH BRAKE",
+                        "stopped · still emitting fixes, press Recover to pull away"
+                    )
+                }
+            }
+
+            // Open-ended. Fixes keep flowing at 0 km/h, which is what dwell and idle
+            // detection need to see; the run only resumes when Recover is pressed.
+            BrakePhase.STOPPED -> speedMps = 0.0
+
+            BrakePhase.RECOVERING -> {
+                // Deliberately gentler than the braking rate, and below the ~0.3 g most
+                // platforms treat as harsh acceleration. Pulling away hard would register a
+                // second event and muddy whatever you were trying to measure.
+                speedMps = (speedMps + BRAKE_RECOVER_ACCEL_MPS2 * dt).coerceAtMost(brakeResumeMps)
+                if (speedMps >= brakeResumeMps) {
+                    speedMps = brakeResumeMps
+                    cancelBraking()
+                    SimLog.event("RECOVER", "back to ${(speedMps * 3.6).roundToInt()} km/h")
+                    pushNotification(force = true)
+                }
+            }
+        }
+
+        val kmh = (speedMps * 3.6).roundToInt()
+        if (_state.value.speedKmh != kmh) _state.update { it.copy(speedKmh = kmh) }
+    }
+
     private fun onRouteConsumed() {
         _state.update { it.copy(status = RunStatus.FINISHED) }
         pushNotification(force = true)
@@ -603,6 +699,16 @@ class MockLocationService : Service() {
 
         private const val MAX_RUN_MS = 6L * 60 * 60 * 1000
         private const val ARRIVED_LOG_INTERVAL_MS = 10_000L
+
+        /**
+         * ~0.87 g — an emergency stop, at the edge of what tyres on dry tarmac can deliver.
+         * Well past the 0.3–0.45 g most telematics platforms flag as harsh, and still
+         * physically plausible, so nothing rejects it as an impossible outlier.
+         */
+        private const val HARSH_BRAKE_DECEL_MPS2 = 8.5
+
+        /** ~0.2 g. Below harsh-acceleration thresholds, so recovery is not a second event. */
+        private const val BRAKE_RECOVER_ACCEL_MPS2 = 2.0
 
         fun intent(ctx: Context): Intent = Intent(ctx, MockLocationService::class.java)
     }

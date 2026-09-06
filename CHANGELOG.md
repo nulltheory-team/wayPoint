@@ -1,78 +1,63 @@
 # Changelog
 
-Notable changes per release. The release workflow uses the section matching the current
-`versionName` as the release body; if there is no matching section it falls back to the commit
-log since the previous tag.
+The release workflow publishes the section matching the current `versionName`, falling back to
+the commit log if there is no match.
 
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.3.0]
+
+### Added
+
+- **Brake** and **Recover** buttons while a simulation is running. Brake decelerates at
+  8.5 m/s² (~0.87 g) to a standstill and stays there, still emitting fixes at 0 km/h; Recover
+  climbs back to the previous speed at a gentler 2 m/s², so the return is not itself a second
+  event. The open-ended stop doubles as dwell testing.
+
+### Fixed
+
+- Every push ran two workflows, testing the project twice. CI and release are now one
+  workflow, with the release job gated on the build job.
+- The Gradle wrapper was not marked executable, so every CI job died with exit code 126.
+- Bumped GitHub Actions off the deprecated Node 20 runtime.
 
 ## [0.2.0]
 
 ### Added
 
-- Zoom controls on the map, dimming at the tile source's limits.
-- Wide-screen layout for the running simulation, folding the controls into two columns so
-  landscape-locked dashcam hardware keeps most of the screen for the map.
-- Segmented route progress bar, which reads as movement at 1 Hz where a solid bar looks frozen.
-- Play Services fused provider feed, via reflection so the APK still links no GMS code. A
-  consumer built on `FusedLocationProviderClient` cannot see test providers at all.
-- Per-fix logging under the `WaypointFix` tag, with a start banner and lifecycle events.
-- 4 Hz update rate. Rates above 4 Hz are now labelled as exceeding what most consumers accept.
-- Retry on the route preview when routing fails, instead of forcing a re-pick.
-- Launcher icons, GitHub Actions for CI and releases, and release signing configuration.
+- Map zoom controls, dimming at the tile source's limits.
+- Wide-screen layout for the running screen, so landscape dashcams keep the map.
+- Segmented progress bar, which reads as movement at 1 Hz where a solid bar looks frozen.
+- Play Services fused provider feed, by reflection so the APK still links no GMS code.
+- Per-fix logging under the `WaypointFix` tag.
+- 4 Hz update rate; rates above 4 Hz are labelled as exceeding what most consumers accept.
+- Retry on the route preview when routing fails.
+- Launcher icons, CI and release workflows, release signing.
 
 ### Changed
 
-- **One search box, used twice**, replacing the side-by-side From/To fields: pick a start
-  point, press Directions, pick a destination, and the route is fetched on selection.
-- **Fixes are emitted on `gps` only** while `gps`, `network` and `fused` are all shadowed.
-  Emitting on every registered provider delivered one callback per provider per tick, so a
-  consumer subscribed to both saw double the configured rate — which silently doubles any
-  speed derived from consecutive timestamps.
+- **One search box, used twice**: pick a start point, press Directions, pick a destination.
+- **Fixes are emitted on `gps` only**, while `gps`, `network` and `fused` are all shadowed.
+  Emitting on every provider gave consumers subscribed to two of them double the configured
+  rate, which silently doubles any speed derived from timestamps.
 - **Arriving no longer stops the fixes.** The vehicle holds at the destination at 0 km/h until
-  Stop. Falling silent reads as signal loss, and a speed history that goes stale reads as
-  unknown rather than zero.
-- The speed readout and the log now report the speed actually injected rather than the slider
-  position, so they agree while holding at the destination.
-- Separate network timeouts for search and routing: routing is a one-shot commitment that is
-  cached forever, so it is worth waiting on where an interactive search is not.
-- Routes are cached per routing server, so changing it in Settings no longer replays the
-  previous server's geometry.
-- The destination collapses to a one-line summary during a run, matching the start point.
+  Stop; falling silent reads as signal loss rather than as a vehicle that has arrived.
+- The speed readout and log report the speed actually injected, not the slider position.
+- Longer network timeout for routing than for search.
+- Routes are cached per routing server.
 
 ### Fixed
 
-- Test providers left registered by a killed process made every later run fail with
-  `Provider "gps" already exists` until reboot. They are now cleared before registering.
-- A failed start could kill the process with `ForegroundServiceDidNotStartInTimeException`,
-  because both early-return paths skipped `startForeground()`.
-- A revoked mock-location appop was swallowed mid-run, leaving the UI and logs reporting a
-  healthy simulation while nothing was being injected.
-- Backing out after arrival left the service injecting, holding a wake lock and shadowing real
-  GPS indefinitely.
-- A failed start stranded the UI on the simulation screen with no way back.
-- Cancelled searches leaked their HTTP response, and were reported as errors rather than as
-  the superseded requests they are.
-- Races on the simulation snapshot between the ticker thread and the UI thread, and a stale
-  tick that could write back after a stop.
+- Test providers leaked by a killed process made every later run fail with
+  `Provider "gps" already exists` until reboot.
+- A failed start could kill the process with `ForegroundServiceDidNotStartInTimeException`.
+- A revoked mock-location appop was swallowed, leaving the UI reporting a healthy run while
+  nothing was injected.
+- Backing out after arrival left the service injecting and holding a wake lock.
+- Cancelled searches leaked their HTTP response and were reported as errors.
+- Races on the simulation snapshot between the ticker and UI threads.
 
 ## [0.1.0]
 
-First release.
-
-### Added
-
-- Route simulation between two points, using OSRM for road geometry and Photon for search.
-  One search box, used twice; long-press the map as a keyboard-free alternative.
-- Live speed control from 0–150 km/h with preset chips, taking effect on the next tick.
-  Speed 0 keeps emitting a stationary fix, which is distinct from Pause.
-- Foreground service that owns the simulation, so a run survives rotation, backgrounding and
-  the Activity being destroyed.
-- Fixed-width per-fix logging under the `WaypointFix` tag, reporting what was actually
-  injected rather than what was computed.
-- Configurable tile, routing and geocoding servers, with routes cached per server so a fetched
-  route replays offline.
-- Position jitter, route looping, and update rates of 1–10 Hz.
-- Play Services fused provider support via reflection, so consumers on
-  `FusedLocationProviderClient` are fed too without the APK linking any GMS code.
+First release. Route simulation between two points using OSRM and Photon, live speed control,
+a foreground service that survives rotation and backgrounding, configurable tile/routing/
+geocoding servers with per-server route caching, position jitter, route looping, and update
+rates from 1 to 10 Hz.

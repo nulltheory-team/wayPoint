@@ -37,6 +37,8 @@
 
     <!-- Screen 3: simulation -->
     <string name="kmh">km/h</string>
+    <string name="brake">Brake</string>
+    <string name="recover">Recover</string>
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
     <string name="stop">Stop</string>

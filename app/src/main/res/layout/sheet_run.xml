@@ -209,6 +209,33 @@
         android:layout_marginTop="12dp"
         android:orientation="horizontal">
 
+        <!-- Amber for the anomaly, accent for the return to normal. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/brakeButton"
+            style="@style/Widget.Waypoint.Button.Event"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/brake"
+            android:textColor="@color/warn"
+            app:icon="@drawable/ic_brake"
+            app:iconGravity="textStart"
+            app:iconTint="@color/warn"
+            app:strokeColor="@color/warn" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/recoverButton"
+            style="@style/Widget.Waypoint.Button.Event"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:text="@string/recover"
+            android:textColor="@color/accent"
+            app:icon="@drawable/ic_recover"
+            app:iconGravity="textStart"
+            app:iconTint="@color/accent"
+            app:strokeColor="@color/accent" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/pauseButton"
             style="@style/Widget.Waypoint.Button.Secondary"
