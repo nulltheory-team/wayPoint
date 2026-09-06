@@ -290,7 +290,11 @@ jitter is implemented (Gaussian, ~3 m sigma, behind the Settings toggle).
 
 ## Licensing and attribution
 
-Licensed under the **Apache License 2.0**. See [LICENSE](LICENSE).
+Copyright 2026 nulltheory.
+
+Licensed under the **Apache License 2.0**. See [LICENSE](LICENSE), which is Apache's canonical
+text, unmodified — the bracketed placeholders in its appendix are part of that text and are
+meant to stay.
 
 | Component | License |
 |---|---|
